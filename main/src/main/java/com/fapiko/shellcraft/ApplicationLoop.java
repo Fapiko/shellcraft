@@ -34,9 +34,10 @@ public class ApplicationLoop extends Thread {
 
 	private boolean running = false;
 	private boolean stopApplicationLoop = false;
+	private boolean stopped = false;
 
 	public ApplicationLoop() {
-
+		setName("ShellCraft ApplicationLoop");
 	}
 
 	public static ApplicationLoop getInstance(ShellCraft parent) {
@@ -72,66 +73,85 @@ public class ApplicationLoop extends Thread {
 		Selector selector = Selector.open();
 		serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-		do {
+		while (!stopApplicationLoop) {
 
+			logger.info("Not Stopped");
 			int readyChannels = selector.selectNow();
 
-			if (readyChannels > 0) {
+			if (readyChannels == 0) {
+				sleep(10);
+				logger.info("herro2");
+				continue;
+			}
 
-				Set<SelectionKey> selectedKeys = selector.selectedKeys();
-				Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+			Set<SelectionKey> selectedKeys = selector.selectedKeys();
+			Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
-				while(keyIterator.hasNext()) {
+			while(keyIterator.hasNext()) {
 
-					SelectionKey key = keyIterator.next();
-					keyIterator.remove();
+				SelectionKey key = keyIterator.next();
+				keyIterator.remove();
 
-					if (stopApplicationLoop) {
+				if (key.isAcceptable()) {
+
+					SocketChannel client = serverSocketChannel.accept();
+					client.configureBlocking(false);
+					client.register(selector, SelectionKey.OP_READ);
+					continue;
+
+				}
+
+				if (key.isReadable()) {
+
+					SocketChannel client = (SocketChannel) key.channel();
+					client.configureBlocking(false);
+					int BUFFER_SIZE = 32;
+					ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+
+					client.read(buffer);
+
+					buffer.flip();
+					Charset charset = Charset.forName("UTF-8");
+					CharsetDecoder decoder = charset.newDecoder();
+					CharBuffer charBuffer = decoder.decode(buffer);
+
+					String command = charBuffer.toString().trim();
+					// Detect client disconnection
+					if (charBuffer.length() == 0) {
+						logger.info("Client disconnected");
 						key.channel().close();
-						continue;
-					}
-
-					if (key.isAcceptable()) {
-
-						SocketChannel client = serverSocketChannel.accept();
-						client.configureBlocking(false);
-						client.register(selector, SelectionKey.OP_READ);
-						continue;
-
-					}
-
-					if (key.isReadable()) {
-
-						SocketChannel client = (SocketChannel) key.channel();
-						client.configureBlocking(false);
-						int BUFFER_SIZE = 32;
-						ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-
-						client.read(buffer);
-
-						buffer.flip();
-						Charset charset = Charset.forName("UTF-8");
-						CharsetDecoder decoder = charset.newDecoder();
-						CharBuffer charBuffer = decoder.decode(buffer);
-
-						String command = charBuffer.toString().trim();
-						logger.info(command);
-						// Detect client disconnection
-						if (charBuffer.length() == 0) {
-							logger.info("Client disconnected");
-							key.channel().close();
+					} else {
+						if (command.equals("reload")) {
+							logger.info("[ShellCraft] reloading");
+							parent.getServer().reload();
 						} else {
-							parent.getServer().dispatchCommand(new CommandSenderWrapper(client), command);
+							parent.getServer().dispatchCommand(new CommandSenderWrapper(client, parent.getServer()), command);
 						}
-
+						logger.info("[ShellCraft] command: " + command);
 					}
 
 				}
+
 			}
 
-			sleep(10);
+			sleep(100);
+//			logger.info("herro");
 
-		} while (!stopApplicationLoop);
+		}
+
+		logger.info("stopping?");
+
+		// Close down the sockets
+		if (stopApplicationLoop) {
+
+			logger.info("Closing sockets");
+
+			Set <SelectionKey> keys = selector.keys();
+			for (SelectionKey key : keys) {
+				key.channel().close();
+			}
+
+		}
 
 		logger.info("out");
 
@@ -145,6 +165,7 @@ public class ApplicationLoop extends Thread {
 		logger.info("closed");
 
 		running = false;
+		stopped = true;
 
 	}
 
@@ -156,6 +177,10 @@ public class ApplicationLoop extends Thread {
 			start();
 		}
 
+	}
+
+	public boolean isStopped() {
+		return stopped;
 	}
 
 }

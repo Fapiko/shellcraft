@@ -30,10 +30,14 @@ public class ShellCraft extends JavaPlugin {
 	public void onDisable() {
 
 		applicationLoop.setStopApplicationLoop(true);
-		try {
-			applicationLoop.join();
-		} catch (InterruptedException ie) {
-			logger.log(Level.SEVERE, "", ie);
+		logger.info("Stopping...");
+		while (!applicationLoop.isStopped()) {
+			try {
+				logger.info("waiting...");
+				Thread.sleep(1000);
+			} catch (InterruptedException ie) {
+				logger.log(Level.SEVERE, "", ie);
+			}
 		}
 
 		logger.info("ShellCraft: onDisable has been invoked");

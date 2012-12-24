@@ -29,11 +29,13 @@ public class CommandSenderWrapper implements CommandSender {
 
 	private static Logger logger = Logger.getLogger(CommandSenderWrapper.class.getName());
 
+	private Server bukkitServer;
 	private SocketChannel client;
 	private CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
 
-	public CommandSenderWrapper(SocketChannel client) {
+	public CommandSenderWrapper(SocketChannel client, Server bukkitServer) {
 		this.client = client;
+		this.bukkitServer = bukkitServer;
 	}
 
 	@Override
@@ -56,22 +58,22 @@ public class CommandSenderWrapper implements CommandSender {
 
 	@Override
 	public Server getServer() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return bukkitServer;
 	}
 
 	@Override
 	public String getName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return "console";
 	}
 
 	@Override
 	public boolean isPermissionSet(String s) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public boolean isPermissionSet(Permission permission) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
@@ -81,51 +83,51 @@ public class CommandSenderWrapper implements CommandSender {
 
 	@Override
 	public boolean hasPermission(Permission permission) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public PermissionAttachment addAttachment(Plugin plugin) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b, int i) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public PermissionAttachment addAttachment(Plugin plugin, int i) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public void removeAttachment(PermissionAttachment permissionAttachment) {
-		//To change body of implemented methods use File | Settings | File Templates.
+
 	}
 
 	@Override
 	public void recalculatePermissions() {
-		//To change body of implemented methods use File | Settings | File Templates.
+
 	}
 
 	@Override
 	public Set<PermissionAttachmentInfo> getEffectivePermissions() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public boolean isOp() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public void setOp(boolean b) {
-		//To change body of implemented methods use File | Settings | File Templates.
+
 	}
 }
