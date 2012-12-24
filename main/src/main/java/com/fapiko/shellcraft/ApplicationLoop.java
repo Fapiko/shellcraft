@@ -1,5 +1,12 @@
 package com.fapiko.shellcraft;
 
+import org.bukkit.Server;
+import org.bukkit.command.CommandSender;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.plugin.Plugin;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -18,10 +25,11 @@ import java.util.logging.Logger;
 
 public class ApplicationLoop extends Thread {
 
-	public static ApplicationLoop instance;
+	private static ApplicationLoop instance;
 	private static Logger logger = Logger.getLogger(ApplicationLoop.class.getName());
 
 	private ServerSocketChannel serverSocketChannel;
+	private ShellCraft parent;
 	private ArrayList<SocketChannel> socketChannels = new ArrayList<SocketChannel>();
 
 	private boolean running = false;
@@ -31,10 +39,11 @@ public class ApplicationLoop extends Thread {
 
 	}
 
-	public static ApplicationLoop getInstance() {
+	public static ApplicationLoop getInstance(ShellCraft parent) {
 
 		if (instance == null) {
 			instance = new ApplicationLoop();
+			instance.parent = parent;
 		}
 
 		return instance;
@@ -98,22 +107,29 @@ public class ApplicationLoop extends Thread {
 						int BUFFER_SIZE = 32;
 						ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
-
 						client.read(buffer);
 
+						buffer.flip();
 						Charset charset = Charset.forName("UTF-8");
 						CharsetDecoder decoder = charset.newDecoder();
 						CharBuffer charBuffer = decoder.decode(buffer);
 
-						logger.info("Message Received: ");
-						logger.info(charBuffer.toString());
+						String command = charBuffer.toString().trim();
+						logger.info(command);
+						// Detect client disconnection
+						if (charBuffer.length() == 0) {
+							logger.info("Client disconnected");
+							key.channel().close();
+						} else {
+							parent.getServer().dispatchCommand(new CommandSenderWrapper(client), command);
+						}
 
 					}
 
 				}
 			}
 
-			sleep(100);
+			sleep(10);
 
 		} while (!stopApplicationLoop);
 

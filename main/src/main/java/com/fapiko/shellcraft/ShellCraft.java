@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ShellCraft extends JavaPlugin {
 
 	private static Logger logger = Logger.getLogger(ShellCraft.class.getName());
-	private ApplicationLoop applicationLoop = ApplicationLoop.getInstance();
+	private ApplicationLoop applicationLoop = ApplicationLoop.getInstance(this);
 
 	private boolean running = false;
 
